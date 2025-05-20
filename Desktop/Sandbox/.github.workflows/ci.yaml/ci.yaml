@@ -1,24 +1,27 @@
-name: Smart Agriculture Pipeline
+name: Docker Image CI
 
 on:
-push:
-branches:
-- main
+  push:
+    branches: [ "smart-agriculture-feature" ]
+  pull_request:
+    branches: [ "smart-agriculture-feature" ]
 
 jobs:
-build_and_push
-runs-on: ubuntu-latest
-steps:
-- name: Checkout Code
-uses: actions/checkout@v2
-- name: set short SHA
-run: |
-echo "SHORT_SHA=$(echo ${GITHUB_SHA} | cut -c1-7)" >> $GITHUB_ENV
-- name: Build Docker Image
-run: |
-dockerbuild -t NJ/smart-agriculture-project:${{env.SHORT_SHA}}  .
-- name: Login to Dockerhub
-run: |
-echo "${{ secrets.DOCKERHUB_TOKEN}}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME}}" --password-stdin
-- name: |
-docker push NJ/smart-agriculNJ/smart-agriculture-project:${{env.SHORT_SHA}}
+  build-and-push:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set short SHA for tagging
+      run: echo "SHORT_SHA=${GITHUB_SHA::7}" >> $GITHUB_ENV
+
+    - name: Log in to Docker Hub
+      run: echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
+
+    - name: Build Docker image
+      run: docker build . -t jnrneba/smart-agriculture:${{ env.SHORT_SHA }}
+
+    - name: Push Docker image
+      run: docker push jnrneba/smart-agriculture:${{ env.SHORT_SHA }}
